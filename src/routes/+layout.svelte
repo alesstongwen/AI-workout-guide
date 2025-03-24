@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.css';
-	let { children } = $props();
+
+	// Define a `children` prop explicitly
+	export let children: any;
 </script>
 
-{@render children()}
+{@html children}

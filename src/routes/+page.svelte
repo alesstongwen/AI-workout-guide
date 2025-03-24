@@ -7,7 +7,7 @@
     let isLoading = false;
 
     type Workout = {
-        id?: number;
+        id?: number;    
         name: string;
         date: string;
     };
@@ -16,25 +16,40 @@
     let completedWorkout = "";
 
     async function fetchWorkouts() {
-        try {
-            const res = await fetch("/api/workouts");
-            workouts = await res.json();
-        } catch (error) {
-            console.error("Error fetching workouts:", error);
+    try {
+        const res = await fetch("/api/workouts");
+        if (!res.ok) {
+            throw new Error(`Error: ${res.status} - ${await res.text()}`);
         }
+        workouts = await res.json();
+        console.log("Fetched workouts:", workouts);
+    } catch (error) {
+        console.error("Error fetching workouts:", error);
+        errorMessage = "Failed to fetch workouts.";
     }
+}
+
 
     async function logWorkout() {
         if (completedWorkout.trim() === "") return;
 
-        await fetch("/api/workouts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: completedWorkout, date: new Date().toLocaleDateString() })
-        });
+        try {
+            const res = await fetch("/api/workouts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: completedWorkout, date: new Date().toLocaleDateString() })
+            });
 
-        completedWorkout = "";
-        fetchWorkouts(); // Refresh list
+            if (!res.ok) {
+                throw new Error(`Error: ${res.status} - ${await res.text()}`);
+            }
+
+            completedWorkout = "";
+            fetchWorkouts(); // Refresh list
+        } catch (error) {
+            console.error("Error logging workout:", error);
+            errorMessage = "Failed to log workout.";
+        }
     }
 
     async function sendMessage() {
@@ -65,10 +80,9 @@
             isLoading = false;
         }
     }
-    // ✅ Use `onMount()` to load workouts only in the browser
+
     onMount(fetchWorkouts);
 </script>
-
 
 <main class="container">
     <h1>AI-Powered Workout Guide</h1>

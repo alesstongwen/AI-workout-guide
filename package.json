@@ -23,13 +23,14 @@
 		"@eslint/js": "^9.18.0",
 		"@libsql/client": "^0.15.0",
 		"@sveltejs/adapter-auto": "^4.0.0",
-		"@sveltejs/kit": "^2.16.0",
+		"@sveltejs/kit": "^2.20.1",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.4",
+		"@tsconfig/svelte": "^5.0.4",
 		"drizzle-kit": "^0.30.2",
 		"drizzle-orm": "^0.40.1",
 		"eslint": "^9.18.0",
@@ -41,12 +42,15 @@
 		"prettier-plugin-svelte": "^3.3.3",
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"sqlite3": "^5.1.7",
-		"svelte": "^5.0.0",
+		"svelte": "^5.23.2",
 		"svelte-check": "^4.0.0",
 		"tailwindcss": "^4.0.0",
-		"typescript": "^5.0.0",
+		"typescript": "^5.8.2",
 		"typescript-eslint": "^8.20.0",
 		"vite": "^6.0.0",
 		"vitest": "^3.0.0"
+	},
+	"dependencies": {
+		"@kinde-oss/kinde-auth-sveltekit": "^2.1.0"
 	}
 }
