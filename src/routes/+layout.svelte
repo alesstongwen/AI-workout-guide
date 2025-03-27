@@ -1,8 +1,6 @@
 <script lang="ts">
-	import '../app.css';
-
-	// Define a `children` prop explicitly
-	export let children: any;
+	import "../app.css";
+	// optional layout logic can go here
 </script>
 
-{@html children}
+<slot />
