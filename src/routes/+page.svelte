@@ -1,5 +1,18 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+import { onMount } from "svelte";
+import Navbar from "../lib/components/Navbar.svelte";
+
+export let data: {
+		isAuthenticated: boolean;
+		user: {
+			id: string;
+			email: string;
+			given_name?: string;
+			family_name?: string;
+		} | null;
+	};
+
+	const { isAuthenticated, user } = data;
 
     let userInput = "";
     let chatResponse = "";
@@ -139,6 +152,16 @@
 
 </script>
 
+<Navbar {isAuthenticated} {user} />
+<div>
+    {#if isAuthenticated}
+        <!-- Your existing workout UI -->
+        <h2>Generate Workout Plan</h2>
+        <!-- Your workout form and content -->
+    {:else}
+        <p>Please log in to access the workout planner.</p>
+    {/if}
+</div>
 <main class="container">
 	<h1>AI-Powered Workout Guide</h1>
 
