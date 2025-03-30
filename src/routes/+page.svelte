@@ -6,6 +6,11 @@
     let errorMessage = "";
     let isLoading = false;
 
+    let goal = "Lose weight";
+	let level = "Beginner";
+	let daysPerWeek = 3;
+	let duration = 30;
+
     type Workout = {
         id?: number;    
         name: string;
@@ -82,55 +87,170 @@
     }
 
     onMount(fetchWorkouts);
+
+    async function generateWorkoutPlan() {
+	isLoading = true;
+	chatResponse = "";
+	errorMessage = "";
+
+	const prompt = `Create a workout plan for someone who wants to ${goal.toLowerCase()}, is a ${level.toLowerCase()} level, can work out ${daysPerWeek} days a week, and has about ${duration} minutes per session.`;
+
+	try {
+		const res = await fetch("/api/chatgpt", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ message: prompt })
+		});
+
+		if (!res.ok || !res.body) {
+			throw new Error("Failed to get response from server");
+		}
+
+		const reader = res.body.getReader();
+		const decoder = new TextDecoder();
+		chatResponse = "";
+
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			chatResponse += decoder.decode(value, { stream: true });
+		}
+	} catch (err) {
+		errorMessage = "Failed to generate workout.";
+		chatResponse = "";
+	} finally {
+		isLoading = false;
+	}
+}
+
 </script>
 
 <main class="container">
-    <h1>AI-Powered Workout Guide</h1>
+	<h1>AI-Powered Workout Guide</h1>
 
-    <!-- Workout Query -->
-    <textarea bind:value={userInput} placeholder="Ask for a workout plan..."></textarea>
-    <button on:click={sendMessage} disabled={isLoading}>Get Workout Plan</button>
+	<div class="form">
+		<div class="field">
+			<label for="goal">Goal:</label>
+			<select id="goal" bind:value={goal}>
+				<option>Lose weight</option>
+				<option>Build muscle</option>
+				<option>Get toned</option>
+			</select>
+		</div>
 
-    {#if errorMessage}
-        <p class="error">{errorMessage}</p>
-    {/if}
+		<div class="field">
+			<label for="level">Fitness Level:</label>
+			<select id="level" bind:value={level}>
+				<option>Beginner</option>
+				<option>Intermediate</option>
+				<option>Advanced</option>
+			</select>
+		</div>
 
-    {#if chatResponse}
-        <div class="response">
-            <p><strong>AI Response:</strong></p>
-            <p>{chatResponse}</p>
-        </div>
-    {/if}
+		<div class="field">
+			<label for="days">Days per Week:</label>
+			<input id="days" type="number" min="1" max="7" bind:value={daysPerWeek} />
+		</div>
+
+		<div class="field">
+			<label for="duration">Minutes per Session:</label>
+			<input id="duration" type="number" min="10" max="120" bind:value={duration} />
+		</div>
+
+		<button class="submit-btn" on:click={generateWorkoutPlan} disabled={isLoading}>
+            Get Workout Plan
+        </button>
+        
+        {#if chatResponse}
+            <div class="response">
+                <h2>AI Response:</h2>
+                <p>{chatResponse}</p>
+            </div>
+        {/if}
+        
+        {#if errorMessage}
+            <p class="error">{errorMessage}</p>
+        {/if}
+        
+        {#if typeof window !== 'undefined' && workouts.length > 0}
+            <div class="workouts">
+                <h2>Your Logged Workouts</h2>
+                <ul class="workout-list">
+                    {#each workouts as workout}
+                        <li>{workout.date} - {workout.name}</li>
+                    {/each}
+                </ul>
+            </div>
+        {/if}
+        
+	</div>
 </main>
 
 <style>
-    .container {
-        max-width: 600px;
-        margin: auto;
-        text-align: center;
-        padding: 20px;
-    }
-    textarea, input {
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-    }
-    button {
-        background: #007bff;
-        color: white;
-        padding: 10px;
-        border: none;
-        cursor: pointer;
-    }
-    .response {
-        margin-top: 20px;
-        background: #f4f4f4;
-        padding: 10px;
-        border-radius: 5px;
-    }
-    .error {
-        color: red;
-        font-weight: bold;
-        margin-top: 10px;
-    }
+	.container {
+		max-width: 600px;
+		margin: auto;
+		text-align: center;
+		padding: 2rem;
+	}
+
+	.form {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		margin-top: 2rem;
+		text-align: left;
+	}
+
+	.field {
+		display: flex;
+		flex-direction: column;
+	}
+
+	label {
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+	}
+
+	input,
+	select {
+		padding: 0.6rem;
+		font-size: 1rem;
+		border: 1px solid #ccc;
+		border-radius: 0.4rem;
+	}
+
+	.submit-btn {
+		margin-top: 1rem;
+		padding: 0.8rem;
+		background-color: #007bff;
+		color: white;
+		font-size: 1rem;
+		border: none;
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition: background-color 0.3s ease;
+	}
+
+	.submit-btn:disabled {
+		background-color: #cccccc;
+		cursor: not-allowed;
+	}
+
+	.submit-btn:hover:enabled {
+		background-color: #0056b3;
+	}
+    .workout-list {
+	list-style: none;
+	padding: 0;
+	margin-top: 2rem;
+	background-color: #f9f9f9;
+	border-radius: 0.5rem;
+	padding: 1rem;
+}
+
+.workout-list li {
+	padding: 0.5rem 0;
+	border-bottom: 1px solid #ddd;
+}
 </style>
