@@ -10,6 +10,8 @@
 	let level = "Beginner";
 	let daysPerWeek = 3;
 	let duration = 30;
+    let formattedResponse = "";
+
 
     type Workout = {
         id?: number;    
@@ -88,6 +90,17 @@
 
     onMount(fetchWorkouts);
 
+    // helper for formatting responses 
+    function formatWorkoutPlan(text: string): string {
+	return text
+		.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")  // bold titles
+		.replace(/\n\n/g, "<br><br>")                       // paragraph breaks
+		.replace(/\n/g, "<br>")                             // line breaks
+		.replace(/(\d+\.) /g, "<br><strong>$1</strong>")   // numbered steps bolded
+		.replace(/-\s+/g, "– ")                             // dash cleanup
+		.trim();
+} 
+
     async function generateWorkoutPlan() {
 	isLoading = true;
 	chatResponse = "";
@@ -114,6 +127,7 @@
 			const { done, value } = await reader.read();
 			if (done) break;
 			chatResponse += decoder.decode(value, { stream: true });
+            formattedResponse = formatWorkoutPlan(chatResponse);
 		}
 	} catch (err) {
 		errorMessage = "Failed to generate workout.";
@@ -164,7 +178,7 @@
         {#if chatResponse}
             <div class="response">
                 <h2>AI Response:</h2>
-                <p>{chatResponse}</p>
+                {@html formattedResponse}
             </div>
         {/if}
         
