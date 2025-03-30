@@ -174,6 +174,13 @@
 		<button class="submit-btn" on:click={generateWorkoutPlan} disabled={isLoading}>
             Get Workout Plan
         </button>
+		{#if isLoading}
+			<div class="typing-indicator">
+				<span class="dot"></span>
+				<span class="dot"></span>
+				<span class="dot"></span>
+			</div>
+		{/if}
         
         {#if chatResponse}
             <div class="response">
@@ -267,4 +274,38 @@
 	padding: 0.5rem 0;
 	border-bottom: 1px solid #ddd;
 }
+
+.typing-indicator {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.3rem;
+	margin-top: 1rem;
+}
+
+.dot {
+	width: 10px;
+	height: 10px;
+	background-color: #007bff;
+	border-radius: 50%;
+	animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+	0%, 80%, 100% {
+		transform: scale(0);
+	}
+	40% {
+		transform: scale(1);
+	}
+}
+
 </style>
