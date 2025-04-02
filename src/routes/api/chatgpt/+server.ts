@@ -3,10 +3,12 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const POST: RequestHandler = async ({ request }) => {
 	const { goal, level, daysPerWeek, duration } = await request.json();
 
-	// Create a prompt for the AI
+	if (!goal || !level || !daysPerWeek || !duration) {
+		return new Response("Missing required fields", { status: 400 });
+	}
+
 	const prompt = `Create a workout plan for someone who wants to ${goal.toLowerCase()}, is a ${level.toLowerCase()} level, can work out ${daysPerWeek} days a week, and has about ${duration} minutes per session.`;
 
-	// Send the prompt to Groq
 	const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
 		method: 'POST',
 		headers: {
@@ -22,7 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (!groqRes.ok) {
 		const errorText = await groqRes.text();
-		console.error('Groq API Error:', errorText);
+		console.error('Groq API error:', errorText);
 		return new Response('Failed to connect to Groq', { status: 500 });
 	}
 

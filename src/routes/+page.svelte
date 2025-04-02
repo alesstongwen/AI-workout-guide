@@ -40,8 +40,14 @@ export let data: {
 		const res = await fetch("/api/chatgpt", {
 	method: "POST",
 	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify({ goal, level, daysPerWeek, duration })
+	body: JSON.stringify({ 
+		goal, 
+		level, 
+		daysPerWeek, 
+		duration 
+	})
 });
+
 
 if (!res.ok) {
 	errorMessage = `Error: ${res.status} - ${await res.text()}`;
