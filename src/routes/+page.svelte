@@ -1,8 +1,8 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import Navbar from "../lib/components/Navbar.svelte";
-
-export let data: {
+	import { onMount } from "svelte";
+	import Navbar from "../lib/components/Navbar.svelte";
+	
+	export let data: {
 		isAuthenticated: boolean;
 		user: {
 			id: string;
@@ -11,160 +11,114 @@ export let data: {
 			family_name?: string;
 		} | null;
 	};
-
+	
 	const { isAuthenticated, user } = data;
-
-    let userInput = "";
-    let chatResponse = "";
-    let errorMessage = "";
-    let isLoading = false;
-
-    let goal = "Lose weight";
+	
+	let userInput = "";
+	let chatResponse = "";
+	let errorMessage = "";
+	let isLoading = false;
+	
+	let goal = "Lose weight";
 	let level = "Beginner";
 	let daysPerWeek = 3;
 	let duration = 30;
-    let formattedResponse = "";
-
-
-    type Workout = {
-        id?: number;    
-        name: string;
-        date: string;
-    };
-
-    let workouts: Workout[] = [];
-    let completedWorkout = "";
-
-    async function fetchWorkouts() {
-    try {
-	const payload = { 
-		goal,
-		level,
-		daysPerWeek,
-		duration
+	let formattedResponse = "";
+	
+	type Workout = {
+		id?: number;
+		name: string;
+		date: string;
 	};
-	const res = await fetch("/api/chatgpt", {
-	method: "POST",
-	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify(payload)
-});
-
-
-if (!res.ok) {
-	errorMessage = `Error: ${res.status} - ${await res.text()}`;
-	return;
-}
-
-const data = await res.json();
-chatResponse = data.message || "No response from AI.";
-formattedResponse = formatWorkoutPlan(chatResponse);
-
-    } catch (error) {
-        console.error("Error fetching workouts:", error);
-        errorMessage = "Failed to fetch workouts.";
-    }
-}
-
-
-    async function logWorkout() {
-        if (completedWorkout.trim() === "") return;
-
-        try {
-            const res = await fetch("/api/workouts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: completedWorkout, date: new Date().toLocaleDateString() })
-            });
-
-            if (!res.ok) {
-                throw new Error(`Error: ${res.status} - ${await res.text()}`);
-            }
-
-            completedWorkout = "";
-            fetchWorkouts(); // Refresh list
-        } catch (error) {
-            console.error("Error logging workout:", error);
-            errorMessage = "Failed to log workout.";
-        }
-    }
-
-    async function sendMessage() {
-        if (isLoading) return;
-        errorMessage = "";
-        chatResponse = "Fetching workout plan...";
-        isLoading = true;
-
-        try {
-            const res = await fetch("/api/chatgpt", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput })
-            });
-
-            if (!res.ok) {
-                errorMessage = `Error: ${res.status} - ${await res.text()}`;
-                chatResponse = "";
-                return;
-            }
-
-            const data = await res.json();
-            chatResponse = data.choices?.[0]?.message?.content || "No response from AI.";
-        } catch (error) {
-            errorMessage = "Failed to connect to the server.";
-            chatResponse = "";
-        } finally {
-            isLoading = false;
-        }
-    }
-
-    onMount(fetchWorkouts);
-
-    // helper for formatting responses 
-    function formatWorkoutPlan(text: string): string {
-	return text
-		.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")  // bold titles
-		.replace(/\n\n/g, "<br><br>")                       // paragraph breaks
-		.replace(/\n/g, "<br>")                             // line breaks
-		.replace(/(\d+\.) /g, "<br><strong>$1</strong>")   // numbered steps bolded
-		.replace(/-\s+/g, "– ")                             // dash cleanup
-		.trim();
-} 
-
-async function generateWorkoutPlan() {
-	isLoading = true;
-	chatResponse = "";
-	errorMessage = "";
-	formattedResponse = "";
-
-	try {
-		const res = await fetch("/api/chatgpt", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				goal,
-				level,
-				daysPerWeek,
-				duration
-			})
-		});
-
-		if (!res.ok) {
-			errorMessage = `Error: ${res.status} - ${await res.text()}`;
-			return;
-		}
-
-		const data = await res.json();
-		chatResponse = data.message || "No response from AI.";
-		formattedResponse = formatWorkoutPlan(chatResponse);
-	} catch (err) {
-		errorMessage = "Failed to generate workout.";
-		chatResponse = "";
-	} finally {
-		isLoading = false;
+	
+	let workouts: Workout[] = [];
+	let completedWorkout = "";
+	
+	// Format AI responses for display
+	function formatWorkoutPlan(text: string): string {
+		return text
+			.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+			.replace(/\n\n/g, "<br><br>")
+			.replace(/\n/g, "<br>")
+			.replace(/(\d+\.) /g, "<br><strong>$1</strong>")
+			.replace(/-\s+/g, "– ")
+			.trim();
 	}
-}
-
-</script>
+	
+	// Fetch saved workouts
+	async function fetchWorkouts() {
+		try {
+			const res = await fetch("/api/workouts");
+			if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+			workouts = await res.json();
+		} catch (error) {
+			console.error("Error fetching workouts:", error);
+			errorMessage = "Failed to fetch workouts.";
+		}
+	}
+	
+	// Save new workout entry
+	async function logWorkout() {
+		if (completedWorkout.trim() === "") return;
+	
+		try {
+			const res = await fetch("/api/workouts", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ name: completedWorkout, date: new Date().toLocaleDateString() })
+			});
+			if (!res.ok) throw new Error(`Log failed: ${res.status}`);
+			completedWorkout = "";
+			await fetchWorkouts(); // Refresh list
+		} catch (error) {
+			console.error("Error logging workout:", error);
+			errorMessage = "Failed to log workout.";
+		}
+	}
+	
+	// Structured input to AI
+	async function generateWorkoutPlan() {
+		isLoading = true;
+		errorMessage = "";
+		chatResponse = "";
+		formattedResponse = "";
+	
+		const payload = {
+			goal,
+			level,
+			daysPerWeek,
+			duration
+		};
+	
+		try {
+			const res = await fetch("/api/chatgpt", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload)
+			});
+	
+			if (!res.ok) {
+				const errText = await res.text();
+				errorMessage = `Error: ${res.status} - ${errText}`;
+				return;
+			}
+	
+			const data = await res.json();
+			chatResponse = data.message || "No response from AI.";
+			formattedResponse = formatWorkoutPlan(chatResponse);
+		} catch (err) {
+			console.error("Error generating workout:", err);
+			errorMessage = "Failed to generate workout.";
+			chatResponse = "";
+		} finally {
+			isLoading = false;
+		}
+	}
+	
+	// Initial fetch of workouts
+	onMount(fetchWorkouts);
+	</script>
+	
 
 <Navbar {isAuthenticated} {user} />
 <div>

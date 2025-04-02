@@ -2,8 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json();
-
-  const { goal, level, daysPerWeek, duration } = body;
+	const { goal, level, daysPerWeek, duration } = body;
 
   if (!goal || !level || !daysPerWeek || !duration) {
     console.error("Missing fields", { goal, level, daysPerWeek, duration });
