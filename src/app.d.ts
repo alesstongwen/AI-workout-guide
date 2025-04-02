@@ -12,6 +12,7 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+		/// <reference types="@sveltejs/kit" />
 	}
 }
 
