@@ -129,34 +129,32 @@ formattedResponse = formatWorkoutPlan(chatResponse);
 		.trim();
 } 
 
-    async function generateWorkoutPlan() {
+async function generateWorkoutPlan() {
 	isLoading = true;
 	chatResponse = "";
 	errorMessage = "";
-
-	const prompt = `Create a workout plan for someone who wants to ${goal.toLowerCase()}, is a ${level.toLowerCase()} level, can work out ${daysPerWeek} days a week, and has about ${duration} minutes per session.`;
+	formattedResponse = "";
 
 	try {
 		const res = await fetch("/api/chatgpt", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ message: prompt })
+			body: JSON.stringify({
+				goal,
+				level,
+				daysPerWeek,
+				duration
+			})
 		});
 
-		if (!res.ok || !res.body) {
-			throw new Error("Failed to get response from server");
+		if (!res.ok) {
+			errorMessage = `Error: ${res.status} - ${await res.text()}`;
+			return;
 		}
 
-		const reader = res.body.getReader();
-		const decoder = new TextDecoder();
-		chatResponse = "";
-
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			chatResponse += decoder.decode(value, { stream: true });
-            formattedResponse = formatWorkoutPlan(chatResponse);
-		}
+		const data = await res.json();
+		chatResponse = data.message || "No response from AI.";
+		formattedResponse = formatWorkoutPlan(chatResponse);
 	} catch (err) {
 		errorMessage = "Failed to generate workout.";
 		chatResponse = "";
