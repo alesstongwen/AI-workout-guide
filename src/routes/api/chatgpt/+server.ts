@@ -1,59 +1,35 @@
-import { TextEncoderStream } from 'node:stream/web';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const { message } = await request.json();
+	const { goal, level, daysPerWeek, duration } = await request.json();
 
-	const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+	// Create a prompt for the AI
+	const prompt = `Create a workout plan for someone who wants to ${goal.toLowerCase()}, is a ${level.toLowerCase()} level, can work out ${daysPerWeek} days a week, and has about ${duration} minutes per session.`;
+
+	// Send the prompt to Groq
+	const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
 		method: 'POST',
 		headers: {
+			'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify({
-			model: 'mistral',
-			prompt: message,
-			stream: true
+			model: 'llama3-8b-8192',
+			messages: [{ role: 'user', content: prompt }],
+			stream: false
 		})
 	});
 
-	if (!ollamaRes.ok || !ollamaRes.body) {
-		return new Response('Failed to connect to Ollama', { status: 500 });
+	if (!groqRes.ok) {
+		const errorText = await groqRes.text();
+		console.error('Groq API Error:', errorText);
+		return new Response('Failed to connect to Groq', { status: 500 });
 	}
 
-	// Create a readable stream from Ollama’s response
-	const decoder = new TextDecoder();
-	const encoder = new TextEncoderStream();
-	const writer = encoder.writable.getWriter();
+	const result = await groqRes.json();
+	const aiMessage = result.choices?.[0]?.message?.content || "No response from Groq.";
 
-	const reader = ollamaRes.body.getReader();
-
-	async function read() {
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-
-			const chunk = decoder.decode(value, { stream: true });
-
-			for (const line of chunk.split('\n')) {
-				if (!line.trim()) continue;
-
-				try {
-					const parsed = JSON.parse(line);
-					await writer.write(parsed.response || '');
-				} catch (e) {
-					console.error('Streaming JSON parse error:', e, line);
-				}
-			}
-		}
-		writer.close();
-	}
-
-	read();
-
-	return new Response(encoder.readable as unknown as BodyInit, {
-		headers: {
-			'Content-Type': 'text/plain',
-			'Transfer-Encoding': 'chunked'
-		}
+	return new Response(JSON.stringify({ message: aiMessage }), {
+		headers: { 'Content-Type': 'application/json' }
 	});
 };

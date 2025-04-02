@@ -37,12 +37,21 @@ export let data: {
 
     async function fetchWorkouts() {
     try {
-        const res = await fetch("/api/workouts");
-        if (!res.ok) {
-            throw new Error(`Error: ${res.status} - ${await res.text()}`);
-        }
-        workouts = await res.json();
-        console.log("Fetched workouts:", workouts);
+		const res = await fetch("/api/chatgpt", {
+	method: "POST",
+	headers: { "Content-Type": "application/json" },
+	body: JSON.stringify({ goal, level, daysPerWeek, duration })
+});
+
+if (!res.ok) {
+	errorMessage = `Error: ${res.status} - ${await res.text()}`;
+	return;
+}
+
+const data = await res.json();
+chatResponse = data.message || "No response from AI.";
+formattedResponse = formatWorkoutPlan(chatResponse);
+
     } catch (error) {
         console.error("Error fetching workouts:", error);
         errorMessage = "Failed to fetch workouts.";

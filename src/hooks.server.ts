@@ -1,4 +1,5 @@
 import { sessionHooks, type Handler } from '@kinde-oss/kinde-auth-sveltekit';
+import 'dotenv/config';
 
 export const handle: Handler = async ({ event, resolve }) => {
     sessionHooks({ event });
