@@ -37,15 +37,16 @@ export let data: {
 
     async function fetchWorkouts() {
     try {
-		const res = await fetch("/api/chatgpt", {
+	const payload = { 
+		goal,
+		level,
+		daysPerWeek,
+		duration
+	};
+	const res = await fetch("/api/chatgpt", {
 	method: "POST",
 	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify({ 
-		goal, 
-		level, 
-		daysPerWeek, 
-		duration 
-	})
+	body: JSON.stringify(payload)
 });
 
 

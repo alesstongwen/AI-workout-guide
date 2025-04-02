@@ -1,11 +1,14 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const { goal, level, daysPerWeek, duration } = await request.json();
+	const body = await request.json();
 
-	if (!goal || !level || !daysPerWeek || !duration) {
-		return new Response("Missing required fields", { status: 400 });
-	}
+  const { goal, level, daysPerWeek, duration } = body;
+
+  if (!goal || !level || !daysPerWeek || !duration) {
+    console.error("Missing fields", { goal, level, daysPerWeek, duration });
+    return new Response("Missing input fields", { status: 400 });
+  }
 
 	const prompt = `Create a workout plan for someone who wants to ${goal.toLowerCase()}, is a ${level.toLowerCase()} level, can work out ${daysPerWeek} days a week, and has about ${duration} minutes per session.`;
 
